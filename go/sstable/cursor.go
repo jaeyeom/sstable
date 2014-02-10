@@ -33,6 +33,14 @@ func (c *CursorToOffset) Entry() *Entry {
 		c.offset += uint64(e.size())
 		c.entry = e
 		return c.entry
+	case io.Reader:
+		e, err := readEntry(r)
+		if err != nil {
+			return nil
+		}
+		c.offset += uint64(e.size())
+		c.entry = e
+		return c.entry
 	default:
 		panic("unimplemented")
 	}

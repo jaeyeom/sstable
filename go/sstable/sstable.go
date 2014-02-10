@@ -8,9 +8,10 @@ import (
 
 // SSTable implements read only random access of the SSTable.
 type SSTable struct {
-	header header
-	index  index
-	reader interface{}
+	header   header
+	index    index
+	reader   interface{}
+	noCursor bool
 }
 
 // NewSSTable creates a SSTable struct
@@ -56,6 +57,11 @@ func NewSSTable(r interface{}) (*SSTable, error) {
 		if err := table.index.ReadAt(r, table.header.indexOffset); err != nil {
 			return nil, err
 		}
+	case io.Reader:
+		// Index can't be read if the reader isn't random access.
+		if err := table.header.read(r); err != nil {
+			return nil, err
+		}
 	default:
 		panic("unimplemented")
 	}
@@ -82,19 +88,50 @@ func (s *SSTable) block(i int) ([]byte, error) {
 	}
 }
 
-// ScanFrom scans from the key to the end of the SSTable.
+// ScanFrom scans from the key to the end of the SSTable. If key is
+// nil, scan from the beginning.
 func (s *SSTable) ScanFrom(key []byte) Cursor {
-	i := s.index.entryIndexOf(key)
-	if i == -1 {
-		i = 0
+	switch s.reader.(type) {
+	case io.ReaderAt:
+		if key == nil {
+			return &CursorToOffset{
+				table:     s,
+				offset:    headerSize,
+				endOffset: s.header.indexOffset,
+			}
+		}
+		i := s.index.entryIndexOf(key)
+		if i == -1 {
+			i = 0
+		}
+		c := CursorToOffset{
+			table:     s,
+			offset:    s.index[i].blockOffset,
+			endOffset: s.header.indexOffset,
+		}
+		if key != nil {
+			for !c.Done() && bytes.Compare(c.Entry().Key, key) < 0 {
+				c.Next()
+			}
+		}
+		return &c
+	case io.Reader:
+		if s.noCursor {
+			panic("unimplemented")
+		}
+		s.noCursor = true
+		c := CursorToOffset{
+			table:     s,
+			offset:    headerSize,
+			endOffset: s.header.indexOffset,
+		}
+		if key != nil {
+			for !c.Done() && bytes.Compare(c.Entry().Key, key) < 0 {
+				c.Next()
+			}
+		}
+		return &c
+	default:
+		panic("unimplemented")
 	}
-	c := CursorToOffset{
-		table:     s,
-		offset:    s.index[i].blockOffset,
-		endOffset: s.header.indexOffset,
-	}
-	for !c.Done() && bytes.Compare(c.Entry().Key, key) < 0 {
-		c.Next()
-	}
-	return &c
 }
