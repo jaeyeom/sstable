@@ -36,6 +36,30 @@ func readIndexEntry(r io.Reader) (*indexEntry, int, error) {
 	return &e, n, e.UnmarshalBinary(buf)
 }
 
+// readIndexEntryAt reads indexEntry at offset from r and returns
+// indexEntry and error.
+func readIndexEntryAt(r io.ReaderAt, offset uint64) (*indexEntry, error) {
+	if int64(offset) < 0 {
+		panic("unimplemented")
+	}
+	lenbuf := make([]byte, 4)
+	if n, err := r.ReadAt(lenbuf, int64(offset)); n != len(lenbuf) {
+		return nil, err
+	}
+	length := binary.BigEndian.Uint32(lenbuf)
+	buf := make([]byte, length+16)
+	if n, err := r.ReadAt(buf, int64(offset)); n != len(buf) {
+		return nil, err
+	}
+	e := indexEntry{}
+	return &e, e.UnmarshalBinary(buf)
+}
+
+// size returns number of bytes of the indexEntry.
+func (e *indexEntry) size() int {
+	return 16 + len(e.keyBytes)
+}
+
 // WriteTo implements the io.WriterTo interface.
 func (e *indexEntry) WriteTo(w io.Writer) (n int64, err error) {
 	var data []byte
@@ -106,6 +130,27 @@ func (i *index) ReadFrom(r io.Reader) (n int64, err error) {
 		if err == nil || err == io.EOF && nn > 0 {
 			*i = append(*i, *e)
 			continue
+		}
+		if err == io.EOF {
+			err = nil
+		}
+		return
+	}
+	panic("unreachable")
+}
+
+// ReadAt reads index from r at offset.
+func (i *index) ReadAt(r io.ReaderAt, offset uint64) (err error) {
+	var e *indexEntry
+	for err == nil {
+		e, err = readIndexEntryAt(r, offset)
+		if e != nil {
+			*i = append(*i, *e)
+			offset += uint64(e.size())
+			continue
+		}
+		if err == io.EOF {
+			err = nil
 		}
 		return
 	}

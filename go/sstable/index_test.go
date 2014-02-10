@@ -3,7 +3,32 @@ package sstable
 import (
 	"bytes"
 	"fmt"
+	"io"
 )
+
+type fakeReader struct {
+	buf    []byte
+	offset int
+}
+
+func (f *fakeReader) Read(p []byte) (n int, err error) {
+	if f.offset >= len(f.buf) {
+		return 0, io.EOF
+	}
+	n = copy(p, f.buf[f.offset:])
+	f.offset += n
+	return n, nil
+}
+
+func (f *fakeReader) ReadAt(b []byte, offset int64) (n int, err error) {
+	if int64(len(f.buf)) < offset {
+		return 0, io.EOF
+	}
+	if int64(len(f.buf)) <= offset+int64(len(b)) {
+		return copy(b, f.buf[offset:]), io.EOF
+	}
+	return copy(b, f.buf[offset:]), nil
+}
 
 func ExampleIndexBufferWrite() {
 	w := &indexBuffer{
@@ -42,6 +67,20 @@ func ExampleIndexReadFrom() {
 		0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 234, 119, 0, 0, 117, 59, 2, 3, 4,
 	})
 	i.ReadFrom(buf)
+	fmt.Println(i)
+	// Output:
+	// [{0 60023 [1 2 3]} {60023 30011 [2 3 4]}]
+}
+
+func ExampleIndexReadAt() {
+	i := index{}
+	buf := fakeReader{
+		buf: []byte{
+			0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 234, 119, 1, 2, 3,
+			0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 234, 119, 0, 0, 117, 59, 2, 3, 4,
+		},
+	}
+	i.ReadAt(&buf, 0)
 	fmt.Println(i)
 	// Output:
 	// [{0 60023 [1 2 3]} {60023 30011 [2 3 4]}]
