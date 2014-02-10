@@ -32,6 +32,30 @@ func readEntry(r io.Reader) (*Entry, error) {
 	return &e, e.UnmarshalBinary(buf)
 }
 
+// readEntryAt reads an entry from the offset of r.
+func readEntryAt(r io.ReaderAt, offset uint64) (*Entry, error) {
+	lenbuf := make([]byte, 8)
+	if int64(offset) < 0 {
+		panic("unimplemented")
+	}
+	if n, err := r.ReadAt(lenbuf, int64(offset)); n != len(lenbuf) {
+		return nil, err
+	}
+	keyLength := binary.BigEndian.Uint32(lenbuf[:4])
+	valueLength := binary.BigEndian.Uint32(lenbuf[4:8])
+	buf := make([]byte, 8+keyLength+valueLength)
+	if n, err := r.ReadAt(buf, int64(offset)); n != len(buf) {
+		return nil, err
+	}
+	e := Entry{}
+	return &e, e.UnmarshalBinary(buf)
+}
+
+// size returns number of bytes in this entry.
+func (e *Entry) size() int {
+	return 8 + len(e.Key) + len(e.Value)
+}
+
 // WriteTo implements the io.WriterTo interface.
 func (e *Entry) WriteTo(w io.Writer) (n int64, err error) {
 	var data []byte
