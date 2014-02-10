@@ -17,15 +17,14 @@ type header struct {
 	indexOffset uint64
 }
 
-// readHeader reads and parses a header from r.
-func readHeader(r io.Reader) (*header, error) {
+// read reads and parses a header from r.
+func (h *header) read(r io.Reader) error {
 	var buf [headerSize]byte
 	if _, err := io.ReadFull(r, buf[:headerSize]); err != nil {
-		return nil, err
+		return err
 	}
-	h := header{}
 	h.UnmarshalBinary(buf[:])
-	return &h, nil
+	return nil
 }
 
 // WriteTo implements the io.WriterTo interface.
