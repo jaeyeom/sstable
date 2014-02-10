@@ -15,6 +15,7 @@ type Entry struct {
 	Value []byte
 }
 
+// readEntry reads an entry from r.
 func readEntry(r io.Reader) (*Entry, error) {
 	lenbuf := make([]byte, 8)
 	if _, err := io.ReadFull(r, lenbuf); err != nil {
@@ -29,43 +30,6 @@ func readEntry(r io.Reader) (*Entry, error) {
 	}
 	e := Entry{}
 	return &e, e.UnmarshalBinary(buf)
-}
-
-// Fix
-func (e *Entry) ReadFrom(r io.Reader) (n int64, err error) {
-
-	var buf [4]byte
-	var nn int
-	readUint32 := func() uint32 {
-		nn, err = io.ReadFull(r, buf[:4])
-		n += int64(nn)
-		return binary.BigEndian.Uint32(buf[:4])
-	}
-	readBytes := func(length uint32) []byte {
-		data := make([]byte, length)
-		nn, err = io.ReadFull(r, data)
-		n += int64(nn)
-		return data
-	}
-	keyLength := readUint32()
-	if err != nil {
-		return
-	}
-	valueLength := readUint32()
-	if err != nil {
-		return
-	}
-	key := readBytes(keyLength)
-	if err != nil {
-		return
-	}
-	value := readBytes(valueLength)
-	if err != nil {
-		return
-	}
-	e.Key = key
-	e.Value = value
-	return
 }
 
 // WriteTo implements the io.WriterTo interface.
