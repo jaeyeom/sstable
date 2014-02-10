@@ -7,6 +7,9 @@ import (
 	"io"
 )
 
+// headerSize is the number of bytes of the header.
+const headerSize = 16
+
 // header implements binary IO and marshal functions.
 type header struct {
 	version     uint32
@@ -16,8 +19,8 @@ type header struct {
 
 // readHeader reads and parses a header from r.
 func readHeader(r io.Reader) (*header, error) {
-	var buf [16]byte
-	if _, err := io.ReadFull(r, buf[:16]); err != nil {
+	var buf [headerSize]byte
+	if _, err := io.ReadFull(r, buf[:headerSize]); err != nil {
 		return nil, err
 	}
 	h := header{}
@@ -39,7 +42,7 @@ func (h *header) WriteTo(w io.Writer) (n int64, err error) {
 
 // MarshalBinary implements the encoding.BinaryMarshaler interface.
 func (h *header) MarshalBinary() (data []byte, err error) {
-	buf := bytes.NewBuffer(make([]byte, 0, 16))
+	buf := bytes.NewBuffer(make([]byte, 0, headerSize))
 	if err := binary.Write(buf, binary.BigEndian, h); err != nil {
 		return nil, err
 	}
@@ -48,7 +51,7 @@ func (h *header) MarshalBinary() (data []byte, err error) {
 
 // UnmarshalBinary implements the encoding.BinaryUnmarshaler interface.
 func (h *header) UnmarshalBinary(data []byte) error {
-	if len(data) != 16 {
+	if len(data) != headerSize {
 		return errors.New("header.UnmarshalBinary: invalid length")
 	}
 	h.version = binary.BigEndian.Uint32(data[:4])
