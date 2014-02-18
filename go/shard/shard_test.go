@@ -8,14 +8,14 @@ import (
 	"path"
 )
 
-func ExampleShardedWriter() {
+func ExampleWriter() {
 	name, err := ioutil.TempDir("", "test")
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 	defer os.RemoveAll(name)
-	w, _ := NewShardedWriter(5, &PrefixSum64Hash{sha1.New()}, NewOSFileWriterFactory(path.Join(name, "test-")))
+	w, _ := NewWriter(5, &PrefixSum64Hash{sha1.New()}, NewOSFileWriterFactory(path.Join(name, "test-")))
 	w.Write([]byte("test0"))
 	w.Write([]byte("test1"))
 	w.Write([]byte("test2"))

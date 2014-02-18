@@ -29,28 +29,28 @@ func (h *PrefixSum64Hash) Sum64() uint64 {
 	return sum
 }
 
-// ShardedWriter writes data to one of the shard based on the hash function.
-type ShardedWriter struct {
+// Writer writes data to one of the shard based on the hash function.
+type Writer struct {
 	w []io.Writer
 	h hash.Hash64
 }
 
 // WriterFactory returns a writer for each i of n.
-type ShardedWriterFactory func(i, n int) io.Writer
+type WriterFactory func(i, n int) io.Writer
 
 // NewOSFileWriterFactory returns a WriterFactory that returns os.File
 // with the filenane prefixed by prefix and the index string such as
 // 00000-of-00100, 00001-of-00100, and so on.
-func NewOSFileWriterFactory(prefix string) ShardedWriterFactory {
+func NewOSFileWriterFactory(prefix string) WriterFactory {
 	return func(i, n int) io.Writer {
 		f, _ := os.Create(fmt.Sprintf("%s%05d-of-%05d", prefix, i, n))
 		return f
 	}
 }
 
-// NewShardedWriter returns a new sharded writer.
-func NewShardedWriter(n int, h hash.Hash64, wf ShardedWriterFactory) (*ShardedWriter, error) {
-	w := ShardedWriter{
+// NewWriter returns a new sharded writer.
+func NewWriter(n int, h hash.Hash64, wf WriterFactory) (*Writer, error) {
+	w := Writer{
 		w: make([]io.Writer, n),
 		h: h,
 	}
@@ -61,7 +61,7 @@ func NewShardedWriter(n int, h hash.Hash64, wf ShardedWriterFactory) (*ShardedWr
 }
 
 // Write writes data to sharded writer.
-func (w *ShardedWriter) Write(data []byte) (int, error) {
+func (w *Writer) Write(data []byte) (int, error) {
 	w.h.Reset()
 	w.h.Write(data)
 	i := w.h.Sum64() % uint64(len(w.w))
@@ -69,7 +69,7 @@ func (w *ShardedWriter) Write(data []byte) (int, error) {
 }
 
 // Close closes shareded writer and never return error.
-func (w *ShardedWriter) Close() error {
+func (w *Writer) Close() error {
 	for i := 0; i < len(w.w); i++ {
 		if c, ok := w.w[i].(io.Closer); ok {
 			c.Close()
