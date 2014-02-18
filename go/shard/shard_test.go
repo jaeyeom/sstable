@@ -15,7 +15,7 @@ func ExampleWriter() {
 		return
 	}
 	defer os.RemoveAll(name)
-	w, _ := NewWriter(5, &PrefixSum64Hash{sha1.New()}, NewOSFileWriterFactory(path.Join(name, "test-")))
+	w := NewWriter(5, &PrefixSum64Hash{sha1.New()}, NewOSFileWriterFactory(path.Join(name, "test-")))
 	w.Write([]byte("test0"))
 	w.Write([]byte("test1"))
 	w.Write([]byte("test2"))

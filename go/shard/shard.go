@@ -49,7 +49,7 @@ func NewOSFileWriterFactory(prefix string) WriterFactory {
 }
 
 // NewWriter returns a new sharded writer.
-func NewWriter(n int, h hash.Hash64, wf WriterFactory) (*Writer, error) {
+func NewWriter(n int, h hash.Hash64, wf WriterFactory) *Writer {
 	w := Writer{
 		w: make([]io.Writer, n),
 		h: h,
@@ -57,7 +57,7 @@ func NewWriter(n int, h hash.Hash64, wf WriterFactory) (*Writer, error) {
 	for i := 0; i < n; i++ {
 		w.w[i] = wf(i, n)
 	}
-	return &w, nil
+	return &w
 }
 
 // Write writes data to sharded writer.
