@@ -5,8 +5,8 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	"io"
 	"hash"
+	"io"
 	"os"
 )
 
@@ -68,7 +68,7 @@ func (w *Writer) Write(data []byte) (int, error) {
 	return w.w[i].Write(data)
 }
 
-// Close closes shareded writer and never return error.
+// Close closes sharded writer and never return error.
 func (w *Writer) Close() error {
 	for i := 0; i < len(w.w); i++ {
 		if c, ok := w.w[i].(io.Closer); ok {
