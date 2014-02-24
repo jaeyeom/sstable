@@ -6,8 +6,14 @@ import (
 	"github.com/jaeyeom/sstable/go/sstable"
 )
 
+// HeapEntry is a struct with an entry and an additional data.
+type HeapEntry struct {
+	sstable.Entry
+	data interface{}
+}
+
 // Entries implements the heap.Interface interface.
-type Entries []sstable.Entry
+type Entries []HeapEntry
 
 // Len implements the sort.Interface interface.
 func (es Entries) Len() int {
@@ -30,7 +36,7 @@ func (es Entries) Swap(i, j int) {
 
 // Push implements the heap.Interface interface.
 func (es *Entries) Push(x interface{}) {
-	if x, ok := x.(sstable.Entry); ok {
+	if x, ok := x.(HeapEntry); ok {
 		*es = append(*es, x)
 	} else {
 		panic("wrong type")
