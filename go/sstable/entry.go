@@ -15,8 +15,8 @@ type Entry struct {
 	Value []byte
 }
 
-// readEntry reads an entry from r.
-func readEntry(r io.Reader) (*Entry, error) {
+// ReadEntry reads an entry from r.
+func ReadEntry(r io.Reader) (*Entry, error) {
 	lenbuf := make([]byte, 8)
 	if _, err := io.ReadFull(r, lenbuf); err != nil {
 		return nil, err
@@ -32,8 +32,8 @@ func readEntry(r io.Reader) (*Entry, error) {
 	return &e, e.UnmarshalBinary(buf)
 }
 
-// readEntryAt reads an entry from the offset of r.
-func readEntryAt(r io.ReaderAt, offset uint64) (*Entry, error) {
+// ReadEntryAt reads an entry from the offset of r.
+func ReadEntryAt(r io.ReaderAt, offset uint64) (*Entry, error) {
 	lenbuf := make([]byte, 8)
 	if int64(offset) < 0 {
 		panic("unimplemented")

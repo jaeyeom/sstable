@@ -26,7 +26,7 @@ func (c *CursorToOffset) Entry() *Entry {
 	}
 	switch r := c.table.reader.(type) {
 	case io.ReaderAt:
-		e, err := readEntryAt(r, c.offset)
+		e, err := ReadEntryAt(r, c.offset)
 		if err != nil {
 			return nil
 		}
@@ -34,7 +34,7 @@ func (c *CursorToOffset) Entry() *Entry {
 		c.entry = e
 		return c.entry
 	case io.Reader:
-		e, err := readEntry(r)
+		e, err := ReadEntry(r)
 		if err != nil {
 			return nil
 		}

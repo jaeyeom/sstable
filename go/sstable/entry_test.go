@@ -32,7 +32,7 @@ func ExampleEntryUnmarshalBinary() {
 
 func ExampleReadEntry() {
 	f := bytes.NewReader([]byte{0, 0, 0, 3, 0, 0, 0, 4, 1, 2, 3, 5, 6, 7, 8})
-	e, _ := readEntry(f)
+	e, _ := ReadEntry(f)
 	fmt.Println(e)
 	// Output:
 	// &{[1 2 3] [5 6 7 8]}
@@ -40,7 +40,7 @@ func ExampleReadEntry() {
 
 func ExampleReadEntryAt() {
 	f := bytes.NewReader([]byte{0, 0, 0, 3, 0, 0, 0, 4, 1, 2, 3, 5, 6, 7, 8})
-	e, _ := readEntryAt(f, 0)
+	e, _ := ReadEntryAt(f, 0)
 	fmt.Println(e)
 	// Output:
 	// &{[1 2 3] [5 6 7 8]}
