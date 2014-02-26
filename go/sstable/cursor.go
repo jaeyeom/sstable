@@ -13,7 +13,7 @@ type Cursor interface {
 
 // CursorToOffset is a Cursor that read until the endOffset.
 type CursorToOffset struct {
-	table     *SSTable
+	reader    interface{}
 	offset    uint64
 	endOffset uint64
 	entry     *Entry
@@ -24,7 +24,7 @@ func (c *CursorToOffset) Entry() *Entry {
 	if c.entry != nil {
 		return c.entry
 	}
-	switch r := c.table.reader.(type) {
+	switch r := c.reader.(type) {
 	case io.ReaderAt:
 		e, err := ReadEntryAt(r, c.offset)
 		if err != nil {
@@ -49,7 +49,7 @@ func (c *CursorToOffset) Entry() *Entry {
 // Done returns true when there is no more entry to read.
 func (c *CursorToOffset) Done() bool {
 	if c.entry == nil && c.offset >= c.endOffset {
-		c.table = nil
+		c.reader = nil
 		return true
 	}
 	return false

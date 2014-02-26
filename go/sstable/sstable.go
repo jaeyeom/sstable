@@ -95,7 +95,7 @@ func (s *SSTable) ScanFrom(key []byte) Cursor {
 	case io.ReaderAt:
 		if key == nil {
 			return &CursorToOffset{
-				table:     s,
+				reader:    s.reader,
 				offset:    headerSize,
 				endOffset: s.header.indexOffset,
 			}
@@ -105,7 +105,7 @@ func (s *SSTable) ScanFrom(key []byte) Cursor {
 			i = 0
 		}
 		c := CursorToOffset{
-			table:     s,
+			reader:    s.reader,
 			offset:    s.index[i].blockOffset,
 			endOffset: s.header.indexOffset,
 		}
@@ -121,7 +121,7 @@ func (s *SSTable) ScanFrom(key []byte) Cursor {
 		}
 		s.noCursor = true
 		c := CursorToOffset{
-			table:     s,
+			reader:    s.reader,
 			offset:    headerSize,
 			endOffset: s.header.indexOffset,
 		}
