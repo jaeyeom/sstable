@@ -19,7 +19,7 @@ func ExampleSortEntries() {
 	name := f.Name()
 	defer os.Remove(name)
 	w := sstable.NewWriter(f)
-	SortEntries(c, 100, w)
+	fmt.Println(SortEntries(c, 100, w))
 	fmt.Println("Cursor is done:", c.Done())
 	outf, _ := os.Open(name)
 	defer outf.Close()
@@ -34,6 +34,7 @@ func ExampleSortEntries() {
 		results.Next()
 	}
 	// Output:
+	// 4 <nil>
 	// Cursor is done: true
 	// &{[1] []}
 	// &{[2] []}
@@ -60,7 +61,7 @@ func ExampleSort() {
 		defer os.Remove(name)
 		w := sstable.NewWriter(f)
 		defer w.Close()
-		SortEntries(c, 20, w)
+		fmt.Println(SortEntries(c, 20, w))
 		fmt.Println("Cursor is done:", c.Done())
 		r, _ := os.Open(name)
 		files = append(files, r)
@@ -99,7 +100,9 @@ func ExampleSort() {
 		results.Next()
 	}
 	// Output:
+	// 3 <nil>
 	// Cursor is done: false
+	// 1 <nil>
 	// Cursor is done: true
 	// &{[1] []}
 	// &{[2] []}
