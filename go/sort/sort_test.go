@@ -1,8 +1,8 @@
 package sort
 
 import (
-	"io/ioutil"
 	"fmt"
+	"io/ioutil"
 	"os"
 
 	"github.com/jaeyeom/sstable/go/sstable"
@@ -19,20 +19,88 @@ func ExampleSortEntries() {
 	name := f.Name()
 	defer os.Remove(name)
 	w := sstable.NewWriter(f)
-	SortEntries(c, w)
-	f2, _ := os.Open(name)
-	defer f2.Close()
-	s, _ := sstable.NewSSTable(f2)
-	c2 := s.ScanFrom([]byte{})
-	if c2 == nil {
-		fmt.Println(c2)
+	SortEntries(c, 100, w)
+	fmt.Println("Cursor is done:", c.Done())
+	outf, _ := os.Open(name)
+	defer outf.Close()
+	s, _ := sstable.NewSSTable(outf)
+	results := s.ScanFrom([]byte{})
+	if results == nil {
+		fmt.Println(results)
 		return
 	}
-	for !c2.Done() {
-		fmt.Println(c2.Entry())
-		c2.Next()
+	for !results.Done() {
+		fmt.Println(results.Entry())
+		results.Next()
 	}
 	// Output:
+	// Cursor is done: true
+	// &{[1] []}
+	// &{[2] []}
+	// &{[3] []}
+	// &{[4] []}
+}
+
+func ExampleSort() {
+	c := &SliceCursor{
+		sstable.Entry{[]byte{3}, []byte{}},
+		sstable.Entry{[]byte{2}, []byte{}},
+		sstable.Entry{[]byte{4}, []byte{}},
+		sstable.Entry{[]byte{1}, []byte{}},
+	}
+	var files []*os.File
+	defer func() {
+		for _, f := range files {
+			f.Close()
+		}
+	}()
+	for !c.Done() {
+		f, _ := ioutil.TempFile("", "")
+		name := f.Name()
+		defer os.Remove(name)
+		w := sstable.NewWriter(f)
+		defer w.Close()
+		SortEntries(c, 20, w)
+		fmt.Println("Cursor is done:", c.Done())
+		r, _ := os.Open(name)
+		files = append(files, r)
+	}
+
+	var cursors []sstable.Cursor
+	for _, f := range files {
+		s, _ := sstable.NewSSTable(f)
+		c := s.ScanFrom(nil)
+		if c == nil {
+			fmt.Println(c)
+			return
+		}
+		cursors = append(cursors, c)
+	}
+
+	f, _ := ioutil.TempFile("", "")
+	name := f.Name()
+	defer os.Remove(name)
+	w := sstable.NewWriter(f)
+	if err := Merge(cursors, w); err != nil {
+		fmt.Println(err)
+		return
+	}
+	w.Close()
+
+	f2, _ := os.Open(name)
+	s, _ := sstable.NewSSTable(f2)
+	results := s.ScanFrom(nil)
+	if results == nil {
+		fmt.Println(results)
+		return
+	}
+	for !results.Done() {
+		fmt.Println(results.Entry())
+		results.Next()
+	}
+	// Output:
+	// Cursor is done: false
+	// Cursor is done: true
 	// &{[1] []}
 	// &{[2] []}
 	// &{[3] []}
