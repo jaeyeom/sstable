@@ -51,9 +51,9 @@ func ReadEntryAt(r io.ReaderAt, offset uint64) (*Entry, error) {
 	return &e, e.UnmarshalBinary(buf)
 }
 
-// size returns number of bytes in this entry.
-func (e *Entry) size() int {
-	return 8 + len(e.Key) + len(e.Value)
+// Size returns number of bytes in this entry.
+func (e *Entry) Size() uint64 {
+	return uint64(8) + uint64(len(e.Key)) + uint64(len(e.Value))
 }
 
 // WriteTo implements the io.WriterTo interface.

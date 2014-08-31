@@ -30,7 +30,7 @@ func (c *CursorToOffset) Entry() *Entry {
 		if err != nil {
 			return nil
 		}
-		c.offset += uint64(e.size())
+		c.offset += e.Size()
 		c.entry = e
 		return c.entry
 	case io.Reader:
@@ -38,7 +38,7 @@ func (c *CursorToOffset) Entry() *Entry {
 		if err != nil {
 			return nil
 		}
-		c.offset += uint64(e.size())
+		c.offset += e.Size()
 		c.entry = e
 		return c.entry
 	default:
