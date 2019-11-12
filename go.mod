@@ -1,4 +1,4 @@
-module github.com/jaeyeom/sstable/go
+module github.com/jaeyeom/sstable
 
 go 1.13
 
