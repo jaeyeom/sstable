@@ -1,6 +1,7 @@
 package sstable
 
 import (
+	"encoding/hex"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -8,14 +9,30 @@ import (
 
 func ExampleWriter() {
 	f, _ := ioutil.TempFile("", "")
+
 	name := f.Name()
 	defer os.Remove(name)
+
 	w := NewWriter(f)
-	w.Write(Entry{[]byte{1, 2, 3}, []byte{5, 6, 7, 8}})
-	w.Write(Entry{[]byte{2, 2, 3}, []byte{8, 5, 6, 7, 8}})
+
+	entries := []Entry{
+		{Key: []byte{1, 2, 3}, Value: []byte{5, 6, 7, 8}},
+		{Key: []byte{2, 2, 3}, Value: []byte{8, 5, 6, 7, 8}},
+	}
+	for _, entry := range entries {
+		if err := w.Write(entry); err != nil {
+			fmt.Println(err)
+		}
+	}
+
 	w.Close()
+
 	b, _ := ioutil.ReadFile(name)
-	fmt.Println(b)
+	fmt.Print(hex.Dump(b))
 	// Output:
-	// [0 0 0 2 0 0 0 1 0 0 0 0 0 0 0 47 0 0 0 3 0 0 0 4 1 2 3 5 6 7 8 0 0 0 3 0 0 0 5 2 2 3 8 5 6 7 8 0 0 0 3 0 0 0 0 0 0 0 16 0 0 0 31 1 2 3]
+	// 00000000  00 00 00 02 00 00 00 01  00 00 00 00 00 00 00 2f  |.............../|
+	// 00000010  00 00 00 03 00 00 00 04  01 02 03 05 06 07 08 00  |................|
+	// 00000020  00 00 03 00 00 00 05 02  02 03 08 05 06 07 08 00  |................|
+	// 00000030  00 00 03 00 00 00 00 00  00 00 10 00 00 00 1f 01  |................|
+	// 00000040  02 03                                             |..|
 }

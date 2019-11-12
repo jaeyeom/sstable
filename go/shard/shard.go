@@ -8,6 +8,8 @@ import (
 	"hash"
 	"io"
 	"os"
+
+	"golang.org/x/xerrors"
 )
 
 // PrefixSum64Hash implements hash.Hash64 interface.
@@ -18,21 +20,28 @@ type PrefixSum64Hash struct {
 // Sun64 implements hash.Hash64 interface. It simply reads the first 8
 // bytes by big endian.
 func (h *PrefixSum64Hash) Sum64() uint64 {
-	var sum uint64
-	b := h.Sum([]byte{})
+	b := h.Sum(nil)
 	buf := bytes.NewReader(b)
-	err := binary.Read(buf, binary.BigEndian, &sum)
-	if err != nil {
-		// Should never happen.
-		panic(err)
+
+	var sum uint64
+	if err := binary.Read(buf, binary.BigEndian, &sum); err != nil {
+		panic(err) // Should never happen.
 	}
+
 	return sum
+}
+
+type hash64 interface {
+	io.Writer
+	// Reset resets the Hash to its initial state.
+	Reset()
+	Sum64() uint64
 }
 
 // Writer writes data to one of the shard based on the hash function.
 type Writer struct {
 	w []io.Writer
-	h hash.Hash64
+	h hash64
 }
 
 // WriterFactory returns a writer for each i of n.
@@ -49,7 +58,7 @@ func NewOSFileWriterFactory(prefix string) WriterFactory {
 }
 
 // NewWriter returns a new sharded writer.
-func NewWriter(n int, h hash.Hash64, wf WriterFactory) *Writer {
+func NewWriter(n int, h hash64, wf WriterFactory) *Writer {
 	w := Writer{
 		w: make([]io.Writer, n),
 		h: h,
@@ -57,14 +66,20 @@ func NewWriter(n int, h hash.Hash64, wf WriterFactory) *Writer {
 	for i := 0; i < n; i++ {
 		w.w[i] = wf(i, n)
 	}
+
 	return &w
 }
 
 // Write writes data to sharded writer.
 func (w *Writer) Write(data []byte) (int, error) {
 	w.h.Reset()
-	w.h.Write(data)
+
+	if _, err := w.h.Write(data); err != nil {
+		return 0, xerrors.Errorf("hash write failed: %w", err)
+	}
+
 	i := w.h.Sum64() % uint64(len(w.w))
+
 	return w.w[i].Write(data)
 }
 
@@ -75,5 +90,6 @@ func (w *Writer) Close() error {
 			c.Close()
 		}
 	}
+
 	return nil
 }

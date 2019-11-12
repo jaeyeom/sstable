@@ -24,22 +24,27 @@ func (c *CursorToOffset) Entry() *Entry {
 	if c.entry != nil {
 		return c.entry
 	}
+
 	switch r := c.reader.(type) {
 	case io.ReaderAt:
 		e, err := ReadEntryAt(r, c.offset)
 		if err != nil {
 			return nil
 		}
+
 		c.offset += e.Size()
 		c.entry = e
+
 		return c.entry
 	case io.Reader:
 		e, err := ReadEntry(r)
 		if err != nil {
 			return nil
 		}
+
 		c.offset += e.Size()
 		c.entry = e
+
 		return c.entry
 	default:
 		panic("unimplemented")
@@ -52,6 +57,7 @@ func (c *CursorToOffset) Done() bool {
 		c.reader = nil
 		return true
 	}
+
 	return false
 }
 
@@ -60,5 +66,6 @@ func (c *CursorToOffset) Next() {
 	if c.entry == nil {
 		c.Entry()
 	}
+
 	c.entry = nil
 }

@@ -20,20 +20,25 @@ type indexEntry struct {
 // number of bytes read, and error.
 func readIndexEntry(r io.Reader) (*indexEntry, int, error) {
 	lenbuf := make([]byte, 4)
+
 	n, err := io.ReadFull(r, lenbuf)
 	if err != nil {
 		return nil, n, err
 	}
+
 	length := binary.BigEndian.Uint32(lenbuf)
 	buf := make([]byte, length+16)
 	copy(buf[:4], lenbuf)
+
 	nn, err := io.ReadFull(r, buf[4:])
 	n += nn
+
 	if err != nil {
 		return nil, n, err
 	}
-	e := indexEntry{}
-	return &e, n, e.UnmarshalBinary(buf)
+
+	var e indexEntry
+	return &e, n, e.UnmarshalBinary(buf) //nolint:wsl
 }
 
 // readIndexEntryAt reads indexEntry at offset from r and returns
@@ -42,17 +47,21 @@ func readIndexEntryAt(r io.ReaderAt, offset uint64) (*indexEntry, error) {
 	if int64(offset) < 0 {
 		panic("unimplemented")
 	}
+
 	lenbuf := make([]byte, 4)
 	if n, err := r.ReadAt(lenbuf, int64(offset)); n != len(lenbuf) {
 		return nil, err
 	}
+
 	length := binary.BigEndian.Uint32(lenbuf)
 	buf := make([]byte, length+16)
+
 	if n, err := r.ReadAt(buf, int64(offset)); n != len(buf) {
 		return nil, err
 	}
-	e := indexEntry{}
-	return &e, e.UnmarshalBinary(buf)
+
+	var e indexEntry
+	return &e, e.UnmarshalBinary(buf) //nolint:wsl
 }
 
 // size returns number of bytes of the indexEntry.
@@ -62,33 +71,36 @@ func (e *indexEntry) size() int {
 
 // WriteTo implements the io.WriterTo interface.
 func (e *indexEntry) WriteTo(w io.Writer) (n int64, err error) {
-	var data []byte
-	data, err = e.MarshalBinary()
+	data, err := e.MarshalBinary()
 	if err != nil {
 		return
 	}
+
 	nn, err := w.Write(data)
-	n = int64(nn)
-	return
+	return int64(nn), err //nolint:wsl
 }
 
 // MarshalBinary implements the encoding.BinaryMarshaler interface.
-func (e *indexEntry) MarshalBinary() (data []byte, err error) {
+func (e *indexEntry) MarshalBinary() ([]byte, error) {
 	buf := bytes.NewBuffer([]byte{})
-	if err = binary.Write(buf, binary.BigEndian, uint32(len(e.keyBytes))); err != nil {
-		return
+
+	if err := binary.Write(buf, binary.BigEndian, uint32(len(e.keyBytes))); err != nil {
+		return nil, err
 	}
-	if err = binary.Write(buf, binary.BigEndian, e.blockOffset); err != nil {
-		return
+
+	if err := binary.Write(buf, binary.BigEndian, e.blockOffset); err != nil {
+		return nil, err
 	}
-	if err = binary.Write(buf, binary.BigEndian, e.blockLength); err != nil {
-		return
+
+	if err := binary.Write(buf, binary.BigEndian, e.blockLength); err != nil {
+		return nil, err
 	}
-	if _, err = buf.Write(e.keyBytes); err != nil {
-		return
+
+	if _, err := buf.Write(e.keyBytes); err != nil {
+		return nil, err
 	}
-	data = buf.Bytes()
-	return
+
+	return buf.Bytes(), nil
 }
 
 // UnmarshalBinary implements the encoding.BinaryUnmarshaler interface.
@@ -96,16 +108,20 @@ func (e *indexEntry) UnmarshalBinary(data []byte) error {
 	if len(data) < 16 {
 		return errors.New("indexEntry.UnmarshalBinary: invalid length")
 	}
+
 	length := binary.BigEndian.Uint32(data[:4])
 	blockOffset := binary.BigEndian.Uint64(data[4:12])
 	blockLength := binary.BigEndian.Uint32(data[12:16])
+
 	if length != uint32(len(data[16:])) {
 		return errors.New("indexEntry.UnmarshalBinary: invalid length")
 	}
+
 	e.blockOffset = blockOffset
 	e.blockLength = blockLength
 	e.keyBytes = make([]byte, length)
 	copy(e.keyBytes, data[16:])
+
 	return nil
 }
 
@@ -122,37 +138,42 @@ func (i index) entryIndexOf(key []byte) int {
 
 // ReadFrom implements the io.ReaderFrom interface.
 func (i *index) ReadFrom(r io.Reader) (n int64, err error) {
-	var e *indexEntry
-	var nn int
 	for err == nil {
-		e, nn, err = readIndexEntry(r)
+		e, nn, err := readIndexEntry(r)
 		n += int64(nn)
+
 		if err == nil || err == io.EOF && nn > 0 {
 			*i = append(*i, *e)
 			continue
 		}
+
 		if err == io.EOF {
 			err = nil
 		}
-		return
+
+		return n, err
 	}
 	panic("unreachable")
 }
 
 // ReadAt reads index from r at offset.
-func (i *index) ReadAt(r io.ReaderAt, offset uint64) (err error) {
-	var e *indexEntry
+func (i *index) ReadAt(r io.ReaderAt, offset uint64) error {
+	var err error
+
 	for err == nil {
-		e, err = readIndexEntryAt(r, offset)
+		e, err := readIndexEntryAt(r, offset)
 		if e != nil {
 			*i = append(*i, *e)
 			offset += uint64(e.size())
+
 			continue
 		}
+
 		if err == io.EOF {
 			err = nil
 		}
-		return
+
+		return err
 	}
 	panic("unreachable")
 }
@@ -163,11 +184,13 @@ func (i index) WriteTo(w io.Writer) (n int64, err error) {
 	for _, entry := range i {
 		nn, err = entry.WriteTo(w)
 		n += nn
+
 		if err != nil {
-			return
+			return n, err
 		}
 	}
-	return
+
+	return n, nil
 }
 
 // indexBuffer implements functions to build a new index.
@@ -181,11 +204,13 @@ type indexBuffer struct {
 func (w *indexBuffer) Write(key []byte, valueSize uint32) {
 	size := len(w.index)
 	if size == 0 || int64(w.index[size-1].blockLength)+int64(valueSize) > int64(w.maxBlockLength) {
-		w.index = append(w.index, indexEntry{})
-		size += 1
-		w.index[size-1].blockOffset = w.offset
-		w.index[size-1].keyBytes = key
+		w.index = append(w.index, indexEntry{
+			blockOffset: w.offset,
+			keyBytes:    key,
+		})
+		size++
 	}
+
 	w.offset += uint64(8) + uint64(len(key)) + uint64(valueSize)
 	w.index[size-1].blockLength += uint32(8) + uint32(len(key)) + valueSize
 }

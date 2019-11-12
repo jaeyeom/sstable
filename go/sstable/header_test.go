@@ -4,6 +4,7 @@ import (
 	"fmt"
 )
 
+//nolint:govet
 func ExampleHeaderMarshalBinary() {
 	h := header{
 		version:     1,
@@ -16,9 +17,19 @@ func ExampleHeaderMarshalBinary() {
 	// [0 0 0 1 0 0 0 2 0 0 0 0 0 0 0 3]
 }
 
+//nolint:govet
 func ExampleHeaderUnmarshalBinary() {
 	h := header{}
-	h.UnmarshalBinary([]byte{0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 3})
+
+	err := h.UnmarshalBinary([]byte{
+		0, 0, 0, 1,
+		0, 0, 0, 2,
+		0, 0, 0, 0, 0, 0, 0, 3,
+	})
+	if err != nil {
+		fmt.Println(err)
+	}
+
 	fmt.Println(h)
 	// Output:
 	// {1 2 3}

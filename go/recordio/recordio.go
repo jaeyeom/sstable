@@ -23,8 +23,10 @@ func (w *WriteCloser) Close() error {
 	if c, ok := interface{}(&w.Writer).(io.Closer); ok {
 		return c.Close()
 	}
+
 	if c, ok := w.f.(io.Closer); ok {
 		return c.Close()
 	}
+
 	return nil
 }

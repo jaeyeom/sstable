@@ -10,25 +10,31 @@ import (
 
 func ExampleSortEntries() {
 	c := &SliceCursor{
-		sstable.Entry{[]byte{3}, []byte{}},
-		sstable.Entry{[]byte{2}, []byte{}},
-		sstable.Entry{[]byte{4}, []byte{}},
-		sstable.Entry{[]byte{1}, []byte{}},
+		sstable.Entry{Key: []byte{3}},
+		sstable.Entry{Key: []byte{2}},
+		sstable.Entry{Key: []byte{4}},
+		sstable.Entry{Key: []byte{1}},
 	}
 	f, _ := ioutil.TempFile("", "")
+
 	name := f.Name()
 	defer os.Remove(name)
+
 	w := sstable.NewWriter(f)
 	fmt.Println(SortEntries(c, 100, w))
 	fmt.Println("Cursor is done:", c.Done())
+
 	outf, _ := os.Open(name)
 	defer outf.Close()
+
 	s, _ := sstable.NewSSTable(outf)
+
 	results := s.ScanFrom([]byte{})
 	if results == nil {
 		fmt.Println(results)
 		return
 	}
+
 	for !results.Done() {
 		fmt.Println(results.Entry())
 		results.Next()
@@ -42,59 +48,74 @@ func ExampleSortEntries() {
 	// &{[4] []}
 }
 
-func ExampleSort() {
+//nolint:funlen
+func Example_sort() {
 	c := &SliceCursor{
-		sstable.Entry{[]byte{3}, []byte{}},
-		sstable.Entry{[]byte{2}, []byte{}},
-		sstable.Entry{[]byte{4}, []byte{}},
-		sstable.Entry{[]byte{1}, []byte{}},
+		sstable.Entry{Key: []byte{3}},
+		sstable.Entry{Key: []byte{2}},
+		sstable.Entry{Key: []byte{4}},
+		sstable.Entry{Key: []byte{1}},
 	}
+
 	var files []*os.File
-	defer func() {
+	defer func() { //nolint:wsl
 		for _, f := range files {
 			f.Close()
 		}
 	}()
+
 	for !c.Done() {
 		f, _ := ioutil.TempFile("", "")
+
 		name := f.Name()
 		defer os.Remove(name)
+
 		w := sstable.NewWriter(f)
 		defer w.Close()
+
 		fmt.Println(SortEntries(c, 20, w))
 		fmt.Println("Cursor is done:", c.Done())
+
 		r, _ := os.Open(name)
 		files = append(files, r)
 	}
 
-	var cursors []sstable.Cursor
+	cursors := make([]sstable.Cursor, 0, len(files))
+
 	for _, f := range files {
 		s, _ := sstable.NewSSTable(f)
+
 		c := s.ScanFrom(nil)
 		if c == nil {
 			fmt.Println(c)
 			return
 		}
+
 		cursors = append(cursors, c)
 	}
 
 	f, _ := ioutil.TempFile("", "")
+
 	name := f.Name()
 	defer os.Remove(name)
+
 	w := sstable.NewWriter(f)
 	if err := Merge(cursors, w); err != nil {
 		fmt.Println(err)
 		return
 	}
+
 	w.Close()
 
 	f2, _ := os.Open(name)
 	s, _ := sstable.NewSSTable(f2)
+
 	results := s.ScanFrom(nil)
 	if results == nil {
 		fmt.Println(results)
 		return
 	}
+
 	for !results.Done() {
 		fmt.Println(results.Entry())
 		results.Next()
@@ -124,44 +145,53 @@ func (c *SliceCursor) Done() bool {
 	return len(*c) == 0
 }
 
+//nolint:funlen
 func ExampleMerge() {
 	f, _ := ioutil.TempFile("", "")
+
 	name := f.Name()
 	defer os.Remove(name)
+
 	w := sstable.NewWriter(f)
+
 	cs := []sstable.Cursor{&SliceCursor{
-		sstable.Entry{[]byte{2}, []byte{}},
-		sstable.Entry{[]byte{5}, []byte{}},
-		sstable.Entry{[]byte{10}, []byte{}},
-		sstable.Entry{[]byte{15}, []byte{}},
+		sstable.Entry{Key: []byte{2}},
+		sstable.Entry{Key: []byte{5}},
+		sstable.Entry{Key: []byte{10}},
+		sstable.Entry{Key: []byte{15}},
 	}, &SliceCursor{
-		sstable.Entry{[]byte{1}, []byte{}},
-		sstable.Entry{[]byte{4}, []byte{}},
-		sstable.Entry{[]byte{11}, []byte{}},
-		sstable.Entry{[]byte{12}, []byte{}},
+		sstable.Entry{Key: []byte{1}},
+		sstable.Entry{Key: []byte{4}},
+		sstable.Entry{Key: []byte{11}},
+		sstable.Entry{Key: []byte{12}},
 	}, &SliceCursor{
-		sstable.Entry{[]byte{6}, []byte{}},
-		sstable.Entry{[]byte{8}, []byte{}},
-		sstable.Entry{[]byte{9}, []byte{}},
-		sstable.Entry{[]byte{14}, []byte{}},
+		sstable.Entry{Key: []byte{6}},
+		sstable.Entry{Key: []byte{8}},
+		sstable.Entry{Key: []byte{9}},
+		sstable.Entry{Key: []byte{14}},
 	}}
 	if err := Merge(cs, w); err != nil {
 		fmt.Println(err)
 		return
 	}
+
 	w.Close()
+
 	f2, _ := os.Open(name)
 	defer f2.Close()
+
 	s, err := sstable.NewSSTable(f2)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
+
 	c := s.ScanFrom([]byte{})
 	if c == nil {
 		fmt.Println(c)
 		return
 	}
+
 	for !c.Done() {
 		fmt.Println(c.Entry())
 		c.Next()

@@ -9,25 +9,42 @@ import (
 
 func ExampleSSTable() {
 	f, _ := ioutil.TempFile("", "")
+
 	name := f.Name()
 	defer os.Remove(name)
+
 	w := NewWriter(f)
-	w.Write(Entry{[]byte{1, 2, 3}, []byte{5, 6, 7, 8}})
-	w.Write(Entry{[]byte{2, 2, 3}, []byte{8, 5, 6, 7, 8}})
+
+	entries := []Entry{
+		{Key: []byte{1, 2, 3}, Value: []byte{5, 6, 7, 8}},
+		{Key: []byte{2, 2, 3}, Value: []byte{8, 5, 6, 7, 8}},
+	}
+	for _, entry := range entries {
+		if err := w.Write(entry); err != nil {
+			fmt.Println(err)
+		}
+	}
+
 	w.Close()
+
 	f2, _ := os.Open(name)
 	defer f2.Close()
+
 	s, _ := NewSSTable(f2)
+
 	c := s.ScanFrom([]byte{1, 2, 3})
 	if c == nil {
 		fmt.Println(c)
 		return
 	}
+
 	for !c.Done() {
 		fmt.Println(c.Entry())
 		c.Next()
 	}
+
 	fmt.Println("---")
+
 	c = s.ScanFrom([]byte{1, 2, 3, 0})
 	for !c.Done() {
 		fmt.Println(c.Entry())
@@ -40,22 +57,36 @@ func ExampleSSTable() {
 	// &{[2 2 3] [8 5 6 7 8]}
 }
 
-func ExampleSSTableReader() {
+func ExampleSSTable_reader() {
 	f, _ := ioutil.TempFile("", "")
+
 	name := f.Name()
 	defer os.Remove(name)
+
 	w := NewWriter(f)
-	w.Write(Entry{[]byte{1, 2, 3}, []byte{5, 6, 7, 8}})
-	w.Write(Entry{[]byte{2, 2, 3}, []byte{8, 5, 6, 7, 8}})
+
+	entries := []Entry{
+		{Key: []byte{1, 2, 3}, Value: []byte{5, 6, 7, 8}},
+		{Key: []byte{2, 2, 3}, Value: []byte{8, 5, 6, 7, 8}},
+	}
+	for _, entry := range entries {
+		if err := w.Write(entry); err != nil {
+			fmt.Println(err)
+		}
+	}
+
 	w.Close()
+
 	b, _ := ioutil.ReadFile(name)
 	// bytes.Buffer does not support random access.
 	s, _ := NewSSTable(bytes.NewBuffer(b))
+
 	c := s.ScanFrom([]byte{1, 2, 3})
 	if c == nil {
 		fmt.Println(c)
 		return
 	}
+
 	for !c.Done() {
 		fmt.Println(c.Entry())
 		c.Next()

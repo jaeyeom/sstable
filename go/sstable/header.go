@@ -5,6 +5,8 @@ import (
 	"encoding/binary"
 	"errors"
 	"io"
+
+	"golang.org/x/xerrors"
 )
 
 // headerSize is the number of bytes of the header.
@@ -20,31 +22,36 @@ type header struct {
 // read reads and parses a header from r.
 func (h *header) read(r io.Reader) error {
 	var buf [headerSize]byte
-	if _, err := io.ReadFull(r, buf[:headerSize]); err != nil {
-		return err
+
+	if _, err := io.ReadFull(r, buf[:]); err != nil {
+		return xerrors.Errorf("failed to read the header: %w", err)
 	}
-	h.UnmarshalBinary(buf[:])
+
+	if err := h.UnmarshalBinary(buf[:]); err != nil {
+		return xerrors.Errorf("failed to unmarshal header: %w", err)
+	}
+
 	return nil
 }
 
 // WriteTo implements the io.WriterTo interface.
 func (h *header) WriteTo(w io.Writer) (n int64, err error) {
-	var data []byte
-	data, err = h.MarshalBinary()
+	data, err := h.MarshalBinary()
 	if err != nil {
 		return
 	}
+
 	nn, err := w.Write(data)
-	n = int64(nn)
-	return
+	return int64(nn), err //nolint:wsl
 }
 
 // MarshalBinary implements the encoding.BinaryMarshaler interface.
-func (h *header) MarshalBinary() (data []byte, err error) {
+func (h *header) MarshalBinary() ([]byte, error) {
 	buf := bytes.NewBuffer(make([]byte, 0, headerSize))
 	if err := binary.Write(buf, binary.BigEndian, h); err != nil {
 		return nil, err
 	}
+
 	return buf.Bytes(), nil
 }
 
@@ -53,8 +60,10 @@ func (h *header) UnmarshalBinary(data []byte) error {
 	if len(data) != headerSize {
 		return errors.New("header.UnmarshalBinary: invalid length")
 	}
+
 	h.version = binary.BigEndian.Uint32(data[:4])
 	h.numBlocks = binary.BigEndian.Uint32(data[4:8])
 	h.indexOffset = binary.BigEndian.Uint64(data[8:])
+
 	return nil
 }
