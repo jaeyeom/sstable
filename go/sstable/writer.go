@@ -5,8 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-
-	"golang.org/x/xerrors"
 )
 
 // Writer is used to build a SSTable binary with Write function.
@@ -65,7 +63,7 @@ func (w *Writer) Close() error {
 
 	_, err := w.indexBuffer.index.WriteTo(w.writer)
 	if err != nil {
-		return xerrors.Errorf("failed to write index to the writer: %w", err)
+		return fmt.Errorf("failed to write index to the writer: %w", err)
 	}
 
 	h := header{
@@ -78,19 +76,19 @@ func (w *Writer) Close() error {
 	case io.WriterAt:
 		data, err := h.MarshalBinary()
 		if err != nil {
-			return xerrors.Errorf("failed to marshal header: %w", err)
+			return fmt.Errorf("failed to marshal header: %w", err)
 		}
 
 		if _, err = writer.WriteAt(data, 0); err != nil {
-			return xerrors.Errorf("failed to write at header position: %w", err)
+			return fmt.Errorf("failed to write at header position: %w", err)
 		}
 	case io.WriteSeeker:
 		if _, err := writer.Seek(0, 0); err != nil {
-			return xerrors.Errorf("failed to seek to the header position: %w", err)
+			return fmt.Errorf("failed to seek to the header position: %w", err)
 		}
 
 		if _, err := h.WriteTo(writer); err != nil {
-			return xerrors.Errorf("failed to write the header: %w", err)
+			return fmt.Errorf("failed to write the header: %w", err)
 		}
 	default:
 		return errors.New("Writer.Close: writer cannot do random access")

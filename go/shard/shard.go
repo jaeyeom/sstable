@@ -8,8 +8,6 @@ import (
 	"hash"
 	"io"
 	"os"
-
-	"golang.org/x/xerrors"
 )
 
 // PrefixSum64Hash implements hash.Hash64 interface.
@@ -75,7 +73,7 @@ func (w *Writer) Write(data []byte) (int, error) {
 	w.h.Reset()
 
 	if _, err := w.h.Write(data); err != nil {
-		return 0, xerrors.Errorf("hash write failed: %w", err)
+		return 0, fmt.Errorf("hash write failed: %w", err)
 	}
 
 	i := w.h.Sum64() % uint64(len(w.w))

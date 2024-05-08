@@ -4,9 +4,8 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"io"
-
-	"golang.org/x/xerrors"
 )
 
 // headerSize is the number of bytes of the header.
@@ -24,11 +23,11 @@ func (h *header) read(r io.Reader) error {
 	var buf [headerSize]byte
 
 	if _, err := io.ReadFull(r, buf[:]); err != nil {
-		return xerrors.Errorf("failed to read the header: %w", err)
+		return fmt.Errorf("failed to read the header: %w", err)
 	}
 
 	if err := h.UnmarshalBinary(buf[:]); err != nil {
-		return xerrors.Errorf("failed to unmarshal header: %w", err)
+		return fmt.Errorf("failed to unmarshal header: %w", err)
 	}
 
 	return nil
