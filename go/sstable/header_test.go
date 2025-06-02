@@ -5,7 +5,7 @@ import (
 )
 
 //nolint:govet
-func ExampleHeaderMarshalBinary() {
+func Example_headerMarshalBinary() {
 	h := header{
 		version:     1,
 		numBlocks:   2,
@@ -18,7 +18,7 @@ func ExampleHeaderMarshalBinary() {
 }
 
 //nolint:govet
-func ExampleHeaderUnmarshalBinary() {
+func Example_headerUnmarshalBinary() {
 	h := header{}
 
 	err := h.UnmarshalBinary([]byte{

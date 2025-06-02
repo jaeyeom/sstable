@@ -7,7 +7,7 @@ import (
 )
 
 //nolint:govet
-func ExampleIndexBufferWrite() {
+func Example_indexBufferWrite() {
 	w := &indexBuffer{
 		maxBlockLength: 64 * 1024,
 	}
@@ -20,7 +20,7 @@ func ExampleIndexBufferWrite() {
 }
 
 //nolint:govet
-func ExampleIndexEntryIndexOf() {
+func Example_indexEntryIndexOf() {
 	i := &index{
 		{0, 60023, []byte{1, 2, 3}},
 		{60023, 30011, []byte{2, 3, 4}},
@@ -39,7 +39,7 @@ func ExampleIndexEntryIndexOf() {
 }
 
 //nolint:govet
-func ExampleIndexReadFrom() {
+func Example_indexReadFrom() {
 	var i index
 
 	buf := bytes.NewBuffer([]byte{
@@ -56,7 +56,7 @@ func ExampleIndexReadFrom() {
 }
 
 //nolint:govet
-func ExampleIndexReadAt() {
+func Example_indexReadAt() {
 	var i index
 
 	f := bytes.NewReader([]byte{
@@ -73,7 +73,7 @@ func ExampleIndexReadAt() {
 }
 
 //nolint:govet
-func ExampleIndexWriteTo() {
+func Example_indexWriteTo() {
 	i := &index{
 		{0, 60023, []byte{1, 2, 3}},
 		{60023, 30011, []byte{2, 3, 4}},
@@ -92,7 +92,7 @@ func ExampleIndexWriteTo() {
 }
 
 //nolint:govet
-func ExampleIndexEntryMarshalBinary() {
+func Example_indexEntryMarshalBinary() {
 	b := indexEntry{
 		blockOffset: 1,
 		blockLength: 10,
@@ -110,7 +110,7 @@ func ExampleIndexEntryMarshalBinary() {
 }
 
 //nolint:govet
-func ExampleIndexEntryUnmarshalBinary() {
+func Example_indexEntryUnmarshalBinary() {
 	var b indexEntry
 
 	err := b.UnmarshalBinary([]byte{0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 10, 5, 6, 7})
