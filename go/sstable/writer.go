@@ -40,14 +40,17 @@ func (w *Writer) Write(e Entry) error {
 			return err
 		}
 
-		w.indexBuffer.offset = uint64(offset)
+		if offset < 0 {
+			return errors.New("Writer.Write: invalid offset")
+		}
+		w.indexBuffer.offset = uint64(offset) //nolint:gosec // offset checked non-negative above
 	}
 
 	if w.lastKey != nil && bytes.Compare(w.lastKey, e.Key) > 0 {
 		return fmt.Errorf("key is not sorted")
 	}
 
-	w.indexBuffer.Write(e.Key, uint32(len(e.Value)))
+	w.indexBuffer.Write(e.Key, uint32(len(e.Value))) //nolint:gosec // value length bounded by practical memory limits
 	_, err := e.WriteTo(w.writer)
 	w.lastKey = e.Key
 
@@ -68,7 +71,7 @@ func (w *Writer) Close() error {
 
 	h := header{
 		version:     2,
-		numBlocks:   uint32(len(w.indexBuffer.index)),
+		numBlocks:   uint32(len(w.indexBuffer.index)), //nolint:gosec // index length bounded by practical limits
 		indexOffset: w.indexBuffer.offset,
 	}
 

@@ -59,7 +59,7 @@ func ExampleEntries_sort() {
 
 	// Iterate through the sorted Entries and print.
 	for _, heapEntry := range data {
-		fmt.Printf("%s %s\n", string(heapEntry.Entry.Key), string(heapEntry.Entry.Value))
+		fmt.Printf("%s %s\n", string(heapEntry.Key), string(heapEntry.Value))
 	}
 
 	// Define the expected output.

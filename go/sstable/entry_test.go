@@ -2,6 +2,7 @@ package sstable
 
 import (
 	"bytes"
+	"encoding/hex"
 	"fmt"
 )
 
@@ -16,9 +17,9 @@ func ExampleEntry_MarshalBinary() {
 		fmt.Println(err)
 	}
 
-	fmt.Println(data)
+	fmt.Print(hex.Dump(data))
 	// Output:
-	// [0 0 0 3 0 0 0 4 1 2 3 5 6 7 8]
+	// 00000000  00 00 00 03 00 00 00 04  01 02 03 05 06 07 08     |...............|
 }
 
 func ExampleEntry_UnmarshalBinary() {
@@ -44,7 +45,7 @@ func ExampleReadEntry() {
 
 func ExampleEntry_WriteTo() {
 	e := Entry{
-		Key:   []byte{1, 2},       // Key length 2
+		Key:   []byte{1, 2},    // Key length 2
 		Value: []byte{3, 4, 5}, // Value length 3
 	}
 
@@ -59,19 +60,19 @@ func ExampleEntry_WriteTo() {
 	// fmt.Printf("Bytes written: %d\n", n)
 	// For example consistency, usually only the primary output is shown.
 
-	fmt.Println(buf.Bytes())
 	// Expected format: [0 0 0 keyLen 0 0 0 valLen keyBytes valBytes]
 	// KeyLen = 2 -> [0 0 0 2]
 	// ValLen = 3 -> [0 0 0 3]
 	// Key    = [1 2]
 	// Value  = [3 4 5]
+	fmt.Print(hex.Dump(buf.Bytes()))
 	// Output:
-	// [0 0 0 2 0 0 0 3 1 2 3 4 5]
+	// 00000000  00 00 00 02 00 00 00 03  01 02 03 04 05           |.............|
 }
 
 func ExampleEntry_Size() {
 	e := Entry{
-		Key:   []byte("test"),  // length 4
+		Key:   []byte("test"),    // length 4
 		Value: []byte("example"), // length 7
 	}
 

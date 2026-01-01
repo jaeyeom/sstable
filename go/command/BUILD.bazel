@@ -1,0 +1,15 @@
+load("@rules_go//go:def.bzl", "go_binary", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = ["command.go"],
+    importpath = "github.com/jaeyeom/sstable/go/command",
+    visibility = ["//visibility:private"],
+    deps = ["//go/sstable:go_default_library"],
+)
+
+go_binary(
+    name = "command",
+    embed = [":go_default_library"],
+    visibility = ["//visibility:public"],
+)

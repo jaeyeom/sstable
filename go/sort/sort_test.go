@@ -1,8 +1,8 @@
+//nolint:revive // package name intentionally matches functionality
 package sort
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 
 	"github.com/jaeyeom/sstable/go/sstable"
@@ -15,7 +15,7 @@ func ExampleSortEntries() {
 		sstable.Entry{Key: []byte{4}},
 		sstable.Entry{Key: []byte{1}},
 	}
-	f, _ := ioutil.TempFile("", "")
+	f, _ := os.CreateTemp("", "")
 
 	name := f.Name()
 	defer os.Remove(name)
@@ -65,7 +65,7 @@ func Example_sort() {
 	}()
 
 	for !c.Done() {
-		f, _ := ioutil.TempFile("", "")
+		f, _ := os.CreateTemp("", "")
 
 		name := f.Name()
 		defer os.Remove(name)
@@ -94,7 +94,7 @@ func Example_sort() {
 		cursors = append(cursors, c)
 	}
 
-	f, _ := ioutil.TempFile("", "")
+	f, _ := os.CreateTemp("", "")
 
 	name := f.Name()
 	defer os.Remove(name)
@@ -147,7 +147,7 @@ func (c *SliceCursor) Done() bool {
 
 //nolint:funlen
 func ExampleMerge() {
-	f, _ := ioutil.TempFile("", "")
+	f, _ := os.CreateTemp("", "")
 
 	name := f.Name()
 	defer os.Remove(name)

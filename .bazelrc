@@ -1,0 +1,40 @@
+# Common Bazel settings for sstable
+
+# Use Bazel modules
+common --enable_bzlmod
+
+# Termux workaround: disable network metrics collection (causes
+# NullPointerException in some environments)
+common --noexperimental_collect_system_network_usage
+
+# Build settings - LLM optimized for minimal noise
+build --incompatible_enable_cc_toolchain_resolution
+build --remote_local_fallback
+build --show_progress_rate_limit=60
+build --curses=no
+build --color=no
+build --verbose_failures
+
+# General build safety
+build --incompatible_disallow_empty_glob
+
+
+# Go-specific settings
+build --@rules_go//go/config:race=false
+build --@rules_go//go/config:msan=false
+build --@rules_go//go/config:static=true
+build --@rules_go//go/config:pure=true
+
+
+# Test settings
+test --test_output=errors
+test --test_summary=short
+test --nobuild_tests_only
+
+# Performance settings
+build --jobs=auto
+test --jobs=auto
+
+# Import user-specific settings (not committed to version control)
+# Copy .bazelrc.user.example to .bazelrc.user and customize as needed
+try-import %workspace%/.bazelrc.user

@@ -3,12 +3,11 @@ package sstable
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"os"
 )
 
 func ExampleSSTable() {
-	f, _ := ioutil.TempFile("", "")
+	f, _ := os.CreateTemp("", "")
 
 	name := f.Name()
 	defer os.Remove(name)
@@ -58,7 +57,7 @@ func ExampleSSTable() {
 }
 
 func ExampleSSTable_reader() {
-	f, _ := ioutil.TempFile("", "")
+	f, _ := os.CreateTemp("", "")
 
 	name := f.Name()
 	defer os.Remove(name)
@@ -77,7 +76,7 @@ func ExampleSSTable_reader() {
 
 	w.Close()
 
-	b, _ := ioutil.ReadFile(name)
+	b, _ := os.ReadFile(name)
 	// bytes.Buffer does not support random access.
 	s, _ := NewSSTable(bytes.NewBuffer(b))
 

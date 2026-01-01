@@ -1,0 +1,32 @@
+version: "2"
+linters:
+  enable:
+    - errcheck
+    - gocritic
+    - godot
+    - gosec
+    - govet
+    - ineffassign
+    - revive
+    - staticcheck
+    - unused
+  disable:
+    - testpackage
+  settings:
+    staticcheck:
+      checks: ["all"]
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    rules:
+      - path: _test\.go
+        linters:
+          - cyclop
+          - funlen
+formatters:
+  exclusions:
+    generated: lax

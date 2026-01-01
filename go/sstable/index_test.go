@@ -104,9 +104,10 @@ func Example_indexEntryMarshalBinary() {
 		fmt.Println(err)
 	}
 
-	fmt.Println(data)
+	fmt.Print(hex.Dump(data))
 	// Output:
-	// [0 0 0 3 0 0 0 0 0 0 0 1 0 0 0 10 5 6 7]
+	// 00000000  00 00 00 03 00 00 00 00  00 00 00 01 00 00 00 0a  |................|
+	// 00000010  05 06 07                                          |...|
 }
 
 //nolint:govet

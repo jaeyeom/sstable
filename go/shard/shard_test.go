@@ -4,13 +4,12 @@ import (
 	"crypto/sha512"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path"
 )
 
 func ExampleWriter() {
-	name, err := ioutil.TempDir("", "test")
+	name, err := os.MkdirTemp("", "test")
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -40,7 +39,7 @@ func ExampleWriter() {
 
 	for i := 0; i < 5; i++ {
 		filename := fmt.Sprintf("test-%05d-of-00005", i)
-		b, _ := ioutil.ReadFile(path.Join(name, filename))
+		b, _ := os.ReadFile(path.Join(name, filename))
 		fmt.Printf("%s:%s\n", filename, string(b))
 	}
 	// Output:
@@ -59,7 +58,7 @@ func ExamplePrefixSum64Hash_Sum64() {
 }
 
 func ExampleNewOSFileWriterFactory() {
-	tempDir, err := ioutil.TempDir("", "examplefactory")
+	tempDir, err := os.MkdirTemp("", "examplefactory")
 	if err != nil {
 		fmt.Println("Failed to create temp dir:", err)
 		return
@@ -87,7 +86,7 @@ func ExampleNewOSFileWriterFactory() {
 	for i := 0; i < numFiles; i++ {
 		fileName := fmt.Sprintf("%s%05d-of-%05d", factoryPrefix, i, numFiles)
 		filePath := path.Join(tempDir, fileName)
-		content, err := ioutil.ReadFile(filePath)
+		content, err := os.ReadFile(filePath)
 		if err != nil {
 			fmt.Printf("Error reading file %s: %v\n", fileName, err)
 			continue

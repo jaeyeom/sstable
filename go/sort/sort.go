@@ -10,7 +10,8 @@ import (
 // SortEntries sorts entries from c in memory and write to w in
 // slightly over the maxSize bytes. Returns number of entries written
 // and error.
-//nolint:golint
+//
+//nolint:revive // intentionally named SortEntries for clarity
 func SortEntries(c sstable.Cursor, maxSize uint64, w *sstable.Writer) (n int, err error) {
 	es, size := Entries{}, uint64(0)
 	for !c.Done() && size < maxSize {

@@ -4,8 +4,7 @@ import (
 	"fmt"
 )
 
-type FakeWriteCloser struct {
-}
+type FakeWriteCloser struct{}
 
 func (f FakeWriteCloser) Write(data []byte) (int, error) {
 	return len(data), nil

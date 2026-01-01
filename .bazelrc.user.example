@@ -1,0 +1,38 @@
+# User-specific Bazel configuration
+#
+# This file is for personal settings that should NOT be committed to version control.
+# Copy this file to .bazelrc.user and customize as needed.
+#
+# How Bazel configuration files work:
+# - .bazelrc          : Team-wide shared configuration (committed to git)
+# - .bazelrc.user     : Per-user overrides (gitignored, never committed)
+#
+# Settings in .bazelrc.user override settings in .bazelrc, allowing you to
+# customize the build for your local environment without affecting others.
+
+# Example: Enable colored output (overrides --color=no in .bazelrc)
+# build --color=yes
+
+# Example: Show build progress more frequently
+# build --show_progress_rate_limit=1
+
+# Example: Use more/fewer parallel jobs
+# build --jobs=8
+
+# Example: Enable remote caching (if your team has a remote cache)
+# build --remote_cache=grpc://your-cache-server:9092
+
+# Example: Set a custom output base for this project
+# startup --output_base=/path/to/custom/output
+
+# Example: Enable verbose test output for debugging
+# test --test_output=all
+
+# Example: Run tests with specific tags
+# test --test_tag_filters=-integration
+
+# Example: Enable disk cache for faster rebuilds
+# build --disk_cache=~/.cache/bazel
+
+# Example: Enable Build without the Bytes for faster remote builds
+# build --remote_download_minimal

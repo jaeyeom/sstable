@@ -1,0 +1,14 @@
+# Changes here will be overwritten by Copier
+_commit: v0.0.4
+_src_path: gh:jaeyeom/bazel-project-template
+author_email: jae.yeom@gmail.com
+author_name: Jaehyun Yeom
+bazel_version: 8.5.0
+github_owner: jaeyeom
+go_module_path: github.com/jaeyeom/sstable
+go_version: 1.25.5
+include_copier_badge: true
+languages:
+- go
+project_description: A Bazel-based mono repo project
+repo_name: sstable

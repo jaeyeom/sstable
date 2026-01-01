@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"io"
+	"math"
 	"sort"
 )
 
@@ -44,19 +45,19 @@ func readIndexEntry(r io.Reader) (*indexEntry, int, error) {
 // readIndexEntryAt reads indexEntry at offset from r and returns
 // indexEntry and error.
 func readIndexEntryAt(r io.ReaderAt, offset uint64) (*indexEntry, error) {
-	if int64(offset) < 0 {
+	if offset > math.MaxInt64 {
 		panic("unimplemented")
 	}
 
 	lenbuf := make([]byte, 4)
-	if n, err := r.ReadAt(lenbuf, int64(offset)); n != len(lenbuf) {
+	if n, err := r.ReadAt(lenbuf, int64(offset)); n != len(lenbuf) { //nolint:gosec // overflow checked above
 		return nil, err
 	}
 
 	length := binary.BigEndian.Uint32(lenbuf)
 	buf := make([]byte, length+16)
 
-	if n, err := r.ReadAt(buf, int64(offset)); n != len(buf) {
+	if n, err := r.ReadAt(buf, int64(offset)); n != len(buf) { //nolint:gosec // overflow checked above
 		return nil, err
 	}
 
@@ -82,9 +83,12 @@ func (e *indexEntry) WriteTo(w io.Writer) (n int64, err error) {
 
 // MarshalBinary implements the encoding.BinaryMarshaler interface.
 func (e *indexEntry) MarshalBinary() ([]byte, error) {
+	if len(e.keyBytes) > math.MaxUint32 {
+		return nil, errors.New("indexEntry.MarshalBinary: keyBytes too large")
+	}
 	buf := bytes.NewBuffer([]byte{})
 
-	if err := binary.Write(buf, binary.BigEndian, uint32(len(e.keyBytes))); err != nil {
+	if err := binary.Write(buf, binary.BigEndian, uint32(len(e.keyBytes))); err != nil { //nolint:gosec // overflow checked above
 		return nil, err
 	}
 
@@ -113,7 +117,7 @@ func (e *indexEntry) UnmarshalBinary(data []byte) error {
 	blockOffset := binary.BigEndian.Uint64(data[4:12])
 	blockLength := binary.BigEndian.Uint32(data[12:16])
 
-	if length != uint32(len(data[16:])) {
+	if uint64(length) != uint64(len(data[16:])) {
 		return errors.New("indexEntry.UnmarshalBinary: invalid length")
 	}
 
@@ -164,7 +168,7 @@ func (i *index) ReadAt(r io.ReaderAt, offset uint64) error {
 		e, err := readIndexEntryAt(r, offset)
 		if e != nil {
 			*i = append(*i, *e)
-			offset += uint64(e.size())
+			offset += uint64(e.size()) //nolint:gosec // size() returns 16 + len(keyBytes) which is always positive
 
 			continue
 		}
@@ -212,5 +216,5 @@ func (w *indexBuffer) Write(key []byte, valueSize uint32) {
 	}
 
 	w.offset += uint64(8) + uint64(len(key)) + uint64(valueSize)
-	w.index[size-1].blockLength += uint32(8) + uint32(len(key)) + valueSize
+	w.index[size-1].blockLength += uint32(8) + uint32(len(key)) + valueSize //nolint:gosec // key length is bounded by maxBlockLength
 }

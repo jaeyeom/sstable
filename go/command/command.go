@@ -87,7 +87,7 @@ func cats(tablePath string, key string) {
 
 // appendKeyValue appends the key and value to the RecordIO.
 func appendKeyValue(tablePath string, key string, value string) {
-	f, err := os.OpenFile(tablePath, os.O_APPEND|os.O_WRONLY, 0644)
+	f, err := os.OpenFile(tablePath, os.O_APPEND|os.O_WRONLY, 0o644)
 	if err != nil {
 		log.Println(err)
 		return

@@ -1,6 +1,7 @@
 package sstable
 
 import (
+	"encoding/hex"
 	"fmt"
 )
 
@@ -12,9 +13,9 @@ func Example_headerMarshalBinary() {
 		indexOffset: 3,
 	}
 	b, _ := h.MarshalBinary()
-	fmt.Println(b)
+	fmt.Print(hex.Dump(b))
 	// Output:
-	// [0 0 0 1 0 0 0 2 0 0 0 0 0 0 0 3]
+	// 00000000  00 00 00 01 00 00 00 02  00 00 00 00 00 00 00 03  |................|
 }
 
 //nolint:govet

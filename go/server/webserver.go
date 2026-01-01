@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"time"
 
 	"github.com/jaeyeom/sstable/go/sstable"
 )
@@ -102,7 +103,11 @@ func main() {
 	http.HandleFunc("/", indexHandler(tbl))
 	http.HandleFunc("/lookup", lookupHandler(tbl))
 
-	if err := http.ListenAndServe(*addr, nil); err != nil {
+	server := &http.Server{
+		Addr:              *addr,
+		ReadHeaderTimeout: 10 * time.Second,
+	}
+	if err := server.ListenAndServe(); err != nil {
 		log.Fatal("ListenAndServe failed: ", err)
 	}
 }

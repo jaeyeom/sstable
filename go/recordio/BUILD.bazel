@@ -1,0 +1,15 @@
+load("@rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "go_default_library",
+    srcs = ["recordio.go"],
+    importpath = "github.com/jaeyeom/sstable/go/recordio",
+    visibility = ["//visibility:public"],
+    deps = ["@com_github_eclesh_recordio//:go_default_library"],
+)
+
+go_test(
+    name = "go_default_test",
+    srcs = ["recordio_test.go"],
+    embed = [":go_default_library"],
+)

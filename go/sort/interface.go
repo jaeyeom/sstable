@@ -1,3 +1,4 @@
+//nolint:revive // package name intentionally matches functionality
 package sort
 
 import (

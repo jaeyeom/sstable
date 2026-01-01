@@ -3,12 +3,11 @@ package sstable
 import (
 	"encoding/hex"
 	"fmt"
-	"io/ioutil"
 	"os"
 )
 
 func ExampleWriter() {
-	f, _ := ioutil.TempFile("", "")
+	f, _ := os.CreateTemp("", "")
 
 	name := f.Name()
 	defer os.Remove(name)
@@ -27,7 +26,7 @@ func ExampleWriter() {
 
 	w.Close()
 
-	b, _ := ioutil.ReadFile(name)
+	b, _ := os.ReadFile(name)
 	fmt.Print(hex.Dump(b))
 	// Output:
 	// 00000000  00 00 00 02 00 00 00 01  00 00 00 00 00 00 00 2f  |.............../|

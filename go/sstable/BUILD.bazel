@@ -1,0 +1,30 @@
+load("@rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "cursor.go",
+        "entry.go",
+        "header.go",
+        "index.go",
+        "recordio.go",
+        "sstable.go",
+        "writer.go",
+    ],
+    importpath = "github.com/jaeyeom/sstable/go/sstable",
+    visibility = ["//visibility:public"],
+)
+
+go_test(
+    name = "go_default_test",
+    srcs = [
+        "cursor_test.go",
+        "entry_test.go",
+        "header_test.go",
+        "index_test.go",
+        "recordio_test.go",
+        "sstable_test.go",
+        "writer_test.go",
+    ],
+    embed = [":go_default_library"],
+)

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"io"
+	"math"
 )
 
 // SSTable implements read only random access of the SSTable.
@@ -14,7 +15,7 @@ type SSTable struct {
 	noCursor bool
 }
 
-// NewSSTable creates a SSTable struct
+// NewSSTable creates a SSTable struct.
 func NewSSTable(r interface{}) (*SSTable, error) {
 	table := SSTable{
 		header: header{},
@@ -37,16 +38,16 @@ func NewSSTable(r interface{}) (*SSTable, error) {
 			return nil, err
 		}
 
-		if int64(table.header.indexOffset) < 0 {
+		if table.header.indexOffset > math.MaxInt64 {
 			panic("unimplemented")
 		}
 
-		newOffset, err = r.Seek(int64(table.header.indexOffset), 0)
+		newOffset, err = r.Seek(int64(table.header.indexOffset), 0) //nolint:gosec // overflow checked above
 		if err != nil {
 			return nil, err
 		}
 
-		if uint64(newOffset) != table.header.indexOffset {
+		if newOffset < 0 || uint64(newOffset) != table.header.indexOffset { //nolint:gosec // newOffset checked non-negative
 			return nil, errors.New("NewSSTable: new offset is not same as the index offset")
 		}
 

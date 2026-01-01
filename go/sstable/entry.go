@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"io"
+	"math"
 )
 
 // Entry struct is a key value pair.
@@ -39,11 +40,11 @@ func ReadEntry(r io.Reader) (*Entry, error) {
 func ReadEntryAt(r io.ReaderAt, offset uint64) (*Entry, error) {
 	var lenbuf [8]byte
 
-	if int64(offset) < 0 {
+	if offset > math.MaxInt64 {
 		panic("unimplemented")
 	}
 
-	if n, err := r.ReadAt(lenbuf[:], int64(offset)); n != len(lenbuf) {
+	if n, err := r.ReadAt(lenbuf[:], int64(offset)); n != len(lenbuf) { //nolint:gosec // overflow checked above
 		return nil, err
 	}
 
@@ -51,7 +52,7 @@ func ReadEntryAt(r io.ReaderAt, offset uint64) (*Entry, error) {
 	valueLength := binary.BigEndian.Uint32(lenbuf[4:8])
 	buf := make([]byte, 8+keyLength+valueLength)
 
-	if n, err := r.ReadAt(buf, int64(offset)); n != len(buf) {
+	if n, err := r.ReadAt(buf, int64(offset)); n != len(buf) { //nolint:gosec // overflow checked above
 		return nil, err
 	}
 
@@ -77,12 +78,15 @@ func (e *Entry) WriteTo(w io.Writer) (n int64, err error) {
 
 // MarshalBinary implements the encoding.BinaryMarshaler interface.
 func (e *Entry) MarshalBinary() ([]byte, error) {
+	if len(e.Key) > math.MaxUint32 || len(e.Value) > math.MaxUint32 {
+		return nil, errors.New("Entry.MarshalBinary: key or value too large")
+	}
 	buf := bytes.NewBuffer([]byte{})
-	if err := binary.Write(buf, binary.BigEndian, uint32(len(e.Key))); err != nil {
+	if err := binary.Write(buf, binary.BigEndian, uint32(len(e.Key))); err != nil { //nolint:gosec // overflow checked above
 		return nil, err
 	}
 
-	if err := binary.Write(buf, binary.BigEndian, uint32(len(e.Value))); err != nil {
+	if err := binary.Write(buf, binary.BigEndian, uint32(len(e.Value))); err != nil { //nolint:gosec // overflow checked above
 		return nil, err
 	}
 
@@ -104,7 +108,8 @@ func (e *Entry) UnmarshalBinary(data []byte) error {
 	}
 
 	keyLength, valueLength := binary.BigEndian.Uint32(data[:4]), binary.BigEndian.Uint32(data[4:8])
-	if uint32(len(data)) != uint32(8)+keyLength+valueLength {
+	expectedLen := uint64(8) + uint64(keyLength) + uint64(valueLength)
+	if uint64(len(data)) != expectedLen {
 		return errors.New("Entry.UnmarshalBinary: invalid length")
 	}
 

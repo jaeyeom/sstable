@@ -1,0 +1,19 @@
+load("@aspect_rules_lint//format:defs.bzl", "format_multirun", "format_test")
+
+package(default_visibility = ["//visibility:public"])
+
+format_multirun(
+    name = "format",
+    go = "@aspect_rules_lint//format:gofumpt",
+    starlark = "@buildifier_prebuilt//:buildifier",
+)
+
+format_test(
+    name = "format_test",
+    size = "small",
+    timeout = "short",
+    go = "@aspect_rules_lint//format:gofumpt",
+    no_sandbox = True,
+    starlark = "@buildifier_prebuilt//:buildifier",
+    workspace = "//:MODULE.bazel",
+)

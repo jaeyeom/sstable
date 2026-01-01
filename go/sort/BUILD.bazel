@@ -1,0 +1,22 @@
+load("@rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "interface.go",
+        "sort.go",
+    ],
+    importpath = "github.com/jaeyeom/sstable/go/sort",
+    visibility = ["//visibility:public"],
+    deps = ["//go/sstable:go_default_library"],
+)
+
+go_test(
+    name = "go_default_test",
+    srcs = [
+        "interface_test.go",
+        "sort_test.go",
+    ],
+    embed = [":go_default_library"],
+    deps = ["//go/sstable:go_default_library"],
+)
